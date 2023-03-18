@@ -8,13 +8,30 @@ import { Label, Input, Button } from '@windmill/react-ui'
 import { connect } from 'react-redux'
 // import { GoogleLogin } from 'react-google-login';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-import { loginAction } from '../redux/actions/authAction'
+import { loginAction, googleLogin, googleSignUp } from '../redux/actions/authAction'
 function Login(props) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const history = useHistory();
 
   const googleSuccess = async (res) => {
     console.log(res);
+    await props?.googleLogin(res?.credential, async (loginResults) => {
+      if (loginResults === true) {
+        history.push('/app')
+      } else if (loginResults === 401) {
+        alert("cre");
+        await props.googleSignUp(res?.credential, async (signUpResults) => {
+          if (signUpResults === true) {
+            history.push('/app')
+          } else {
+            alert("not");
+          }
+        })
+      }
+      else {
+
+      }
+    })
   }
 
   const googleFailure = (error) => {
@@ -22,21 +39,21 @@ function Login(props) {
     console.log('google sign in unsuccesfull');
   }
 
-  const regularLogin = async() =>{
-    await props.loginAction('nabilcambiaso@gmail.com',"123456",(res)=>{
-       if (res){
+  const regularLogin = async () => {
+    await props.loginAction('nabilcambiaso@gmail.com', "123456", (res) => {
+      if (res) {
         history.push('/app')
-       }
-       else{
-
-       }
+      }
+      else {
+        console.log("first")
+      }
     })
   }
 
   useEffect(() => {
-    
+
   }, [props.authState])
-  
+
 
   return (
     <GoogleOAuthProvider clientId="583724674784-gd3eo44manqh04t2b46to4340k1hand8.apps.googleusercontent.com">
@@ -70,7 +87,7 @@ function Login(props) {
                   <Input className="mt-1" type="password" placeholder="***************" />
                 </Label>
 
-                <Button onClick={regularLogin} className="mt-4" block 
+                <Button onClick={regularLogin} className="mt-4" block
                 // tag={Link} to="/app"
                 >
                   Log in
@@ -80,7 +97,6 @@ function Login(props) {
                 <GoogleLogin
                   onSuccess={googleSuccess}
                   onError={googleFailure}
-
                 />
                 {/* <GoogleLogin
                 clientId='583724674784-gd3eo44manqh04t2b46to4340k1hand8.apps.googleusercontent.com'
@@ -132,7 +148,8 @@ const mapStatetoProps = (state) => {
 const mapDispatchtoProps = (dispatch) => {
   return {
     loginAction: (email, password, callback) => dispatch(loginAction(email, password, callback)),
-
+    googleLogin: (token, callback) => dispatch(googleLogin(token, callback)),
+    googleSignUp: (token, callback) => dispatch(googleSignUp(token, callback)),
   }
 }
 export default connect(mapStatetoProps, mapDispatchtoProps)(Login);
